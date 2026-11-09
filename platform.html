@@ -1,0 +1,1181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>赛情报 · 武汉理工大学校内竞赛情报聚合平台</title>
+  <style>
+/* =========================================================================
+ * 赛情报 · 样式表 style.css
+ * 设计原则（参考 Apple / Material / Fluent 的 UI 规范）：
+ *   1. 页面层级清晰：页头 → 工具栏 → 内容卡片 → 页脚；
+ *   2. 按钮优先级：主按钮（实心蓝）/ 次按钮（描边）/ 文字按钮；
+ *   3. 任务导向布局：一屏之内完成"找竞赛 → 看收益 → 收藏"的闭环。
+ * ========================================================================= */
+
+:root {
+  --brand: #1c4fd8;
+  --brand-dark: #153a9e;
+  --brand-soft: #e8efff;
+  --accent: #f2a93b;
+  --ink: #17203a;
+  --muted: #5c6784;
+  --line: #e3e8f2;
+  --bg: #f4f7fc;
+  --card: #ffffff;
+  --ok: #12805c;
+  --warn: #c2410c;
+  --radius: 12px;
+  --shadow: 0 1px 2px rgba(23,32,58,.06), 0 6px 20px rgba(23,32,58,.06);
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--brand); text-decoration: none; }
+
+.hidden { display: none !important; }
+
+/* ---------------- 页头 ---------------- */
+.topbar {
+  background: linear-gradient(135deg, var(--brand-dark), var(--brand));
+  color: #fff;
+  padding: 14px 0;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  box-shadow: 0 2px 10px rgba(21,58,158,.25);
+}
+.topbar .wrap { display: flex; align-items: center; gap: 16px; }
+.brand { display: flex; align-items: center; gap: 10px; font-size: 20px; font-weight: 700; letter-spacing: .5px; }
+.brand .logo {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--accent); color: #17203a;
+  display: grid; place-items: center; font-size: 16px; font-weight: 800;
+}
+.brand small { display: block; font-size: 12px; font-weight: 400; opacity: .85; letter-spacing: 0; }
+.topbar .spacer { flex: 1; }
+.user-chip {
+  display: flex; align-items: center; gap: 10px;
+  background: rgba(255,255,255,.14);
+  border: 1px solid rgba(255,255,255,.25);
+  padding: 6px 12px; border-radius: 999px; font-size: 13px;
+}
+.mode-badge {
+  font-size: 12px; padding: 3px 10px; border-radius: 999px;
+  background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.3);
+}
+
+/* ---------------- 布局容器 ---------------- */
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+main { padding: 26px 0 60px; }
+
+/* ---------------- 按钮 ---------------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  border: 1px solid transparent; border-radius: 9px;
+  padding: 9px 16px; font-size: 14px; font-family: inherit;
+  cursor: pointer; transition: .15s; white-space: nowrap;
+}
+.btn-primary { background: var(--brand); color: #fff; }
+.btn-primary:hover { background: var(--brand-dark); }
+.btn-ghost { background: #fff; color: var(--brand); border-color: var(--line); }
+.btn-ghost:hover { background: var(--brand-soft); }
+.btn-text { background: transparent; color: var(--muted); padding: 6px 8px; }
+.btn-text:hover { color: var(--brand); }
+.btn-danger { background: #fff; color: #c0392b; border-color: #f0c8c2; }
+.btn-danger:hover { background: #fdeceb; }
+.btn-sm { padding: 5px 11px; font-size: 13px; border-radius: 7px; }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ---------------- 工具栏 / 筛选 ---------------- */
+.filters {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 16px 18px; box-shadow: var(--shadow);
+  display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; margin-bottom: 22px;
+}
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { font-size: 12px; color: var(--muted); }
+.field input, .field select, .field textarea {
+  border: 1px solid var(--line); border-radius: 9px;
+  padding: 9px 12px; font-size: 14px; font-family: inherit;
+  color: var(--ink); background: #fff; outline: none; min-width: 130px;
+}
+.field input:focus, .field select:focus, .field textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+.field.grow { flex: 1; min-width: 220px; }
+.field.grow input { width: 100%; }
+
+/* ---------------- 统计条 ---------------- */
+.stats { display: flex; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; }
+.stat {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 10px 16px; box-shadow: var(--shadow); font-size: 13px; color: var(--muted);
+}
+.stat b { font-size: 18px; color: var(--brand); margin-right: 4px; }
+
+/* ---------------- 卡片列表 ---------------- */
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 16px; }
+
+.card {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 18px; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 10px;
+  transition: .18s; cursor: pointer;
+}
+.card:hover { transform: translateY(-2px); border-color: #c9d6f5; }
+.card h3 { margin: 0; font-size: 17px; line-height: 1.4; }
+.card .meta { font-size: 13px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 8px; }
+.card .desc { font-size: 13.5px; color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.tag {
+  display: inline-block; font-size: 12px; padding: 2px 9px; border-radius: 999px;
+  background: var(--brand-soft); color: var(--brand-dark); white-space: nowrap;
+}
+.tag.gold { background: #fdf3e0; color: #9a6210; }
+.tag.line { background: #eef1f7; color: var(--muted); }
+.tag.national { background: #e8efff; color: var(--brand-dark); }
+.tag.province { background: #e9f6ef; color: var(--ok); }
+.tag.school { background: #f1f1f5; color: var(--muted); }
+.tag.ok { background: #e9f6ef; color: var(--ok); }
+.tag.warn { background: #fdeee5; color: var(--warn); }
+
+.card .foot { display: flex; align-items: center; justify-content: space-between; margin-top: auto; padding-top: 6px; border-top: 1px dashed var(--line); }
+.card .foot .views { font-size: 12.5px; color: var(--muted); }
+.benefit-line { font-size: 13px; color: #9a6210; background: #fdf7ec; border-radius: 8px; padding: 8px 10px; }
+
+/* ---------------- 详情页 ---------------- */
+.detail-head {
+  background: var(--card); border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 24px; box-shadow: var(--shadow); margin-bottom: 18px;
+}
+.detail-head h2 { margin: 0 0 10px; font-size: 24px; }
+.detail-head .tags { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+.detail-actions { display: flex; gap: 10px; margin-top: 14px; }
+
+.info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 8px; }
+.info-item { border-left: 3px solid var(--brand); padding: 2px 0 2px 12px; }
+.info-item .k { font-size: 12px; color: var(--muted); }
+.info-item .v { font-size: 14.5px; font-weight: 600; }
+
+.section { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px 24px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.section h3 { margin: 0 0 14px; font-size: 17px; display: flex; align-items: center; gap: 8px; }
+.section h3::before { content: ""; width: 4px; height: 16px; background: var(--accent); border-radius: 2px; }
+
+.benefit-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.benefit-table th, .benefit-table td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.benefit-table th { background: var(--brand-soft); color: var(--brand-dark); font-weight: 600; font-size: 13px; }
+.benefit-table tr:last-child td { border-bottom: none; }
+
+.source-item { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px dashed var(--line); font-size: 14px; }
+.source-item:last-child { border-bottom: none; }
+.source-item .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--ok); margin-top: 8px; flex: 0 0 auto; }
+.source-item .dot.no { background: #c9a227; }
+
+.notice { font-size: 12.5px; color: var(--muted); background: #f7f9fd; border: 1px dashed var(--line); border-radius: 8px; padding: 10px 12px; }
+
+/* ---------------- 表单 / 登录 ---------------- */
+.auth-wrap { max-width: 430px; margin: 40px auto; }
+.panel { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 26px; }
+.panel h3 { margin: 0 0 4px; font-size: 20px; }
+.panel .lead { color: var(--muted); font-size: 13.5px; margin-bottom: 18px; }
+.panel .field { margin-bottom: 14px; }
+.panel .field input { width: 100%; }
+.form-actions { display: flex; gap: 10px; margin-top: 6px; }
+.hint { font-size: 12.5px; color: var(--muted); background: #f7f9fd; border-radius: 8px; padding: 10px 12px; margin-top: 14px; line-height: 1.7; }
+.switch-line { text-align: center; font-size: 13.5px; color: var(--muted); margin-top: 16px; }
+
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.form-grid .full { grid-column: 1 / -1; }
+
+/* ---------------- 表格（管理后台） ---------------- */
+.admin-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.admin-table th, .admin-table td { padding: 10px 12px; border-bottom: 1px solid var(--line); text-align: left; }
+.admin-table th { background: var(--brand-soft); color: var(--brand-dark); font-size: 13px; }
+.admin-table td .ops { display: flex; gap: 6px; }
+
+/* ---------------- 导航页签 ---------------- */
+.tabs { display: flex; gap: 6px; margin-bottom: 20px; flex-wrap: wrap; }
+.tab {
+  padding: 8px 16px; border-radius: 999px; font-size: 14px; cursor: pointer;
+  border: 1px solid var(--line); background: #fff; color: var(--muted);
+}
+.tab.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+
+/* ---------------- 空状态 / 提示 ---------------- */
+.empty { text-align: center; padding: 56px 20px; color: var(--muted); }
+.empty .big { font-size: 40px; margin-bottom: 10px; }
+
+/* ---------------- 提示条 ---------------- */
+#toast {
+  position: fixed; right: 22px; bottom: 22px; z-index: 999;
+  display: flex; flex-direction: column; gap: 8px; align-items: flex-end;
+}
+.toast-item {
+  background: #17203a; color: #fff; padding: 11px 16px; border-radius: 9px;
+  font-size: 13.5px; box-shadow: 0 8px 26px rgba(0,0,0,.22); animation: pop .2s ease;
+  max-width: 340px;
+}
+.toast-item.err { background: #b3261e; }
+.toast-item.ok { background: var(--ok); }
+@keyframes pop { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* ---------------- 弹窗 ---------------- */
+.modal-mask {
+  position: fixed; inset: 0; background: rgba(23,32,58,.45); z-index: 100;
+  display: grid; place-items: center; padding: 20px;
+}
+.modal {
+  background: #fff; border-radius: var(--radius); width: 100%; max-width: 620px;
+  max-height: 88vh; overflow: auto; padding: 24px; box-shadow: 0 20px 60px rgba(0,0,0,.3);
+}
+.modal h3 { margin: 0 0 16px; font-size: 19px; }
+.modal .modal-foot { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+/* ---------------- 页脚 ---------------- */
+footer { border-top: 1px solid var(--line); padding: 22px 0; color: var(--muted); font-size: 12.5px; text-align: center; }
+
+@media (max-width: 620px) {
+  .form-grid { grid-template-columns: 1fr; }
+  .topbar .brand small { display: none; }
+  .grid { grid-template-columns: 1fr; }
+}
+
+</style>
+</head>
+<body>
+  <!-- ===================== 页头 ===================== -->
+  <header class="topbar">
+    <div class="wrap">
+      <div class="brand">
+        <span class="logo">赛</span>
+        <span>
+          赛情报
+          <small>武汉理工大学校内竞赛情报聚合平台</small>
+        </span>
+      </div>
+      <div class="spacer"></div>
+      <span class="mode-badge" id="modeBadge">运行模式</span>
+      <button class="btn btn-sm btn-ghost hidden" id="btnLogin">登录 / 注册</button>
+      <div class="user-chip hidden" id="userChip">
+        <span id="userName">未登录</span>
+        <button class="btn btn-sm btn-ghost" id="btnLogout">退出</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+
+    <!-- ===================== 视图 1：登录 / 注册 ===================== -->
+    <section id="viewAuth" class="auth-wrap hidden">
+      <div class="panel">
+        <h3 id="authTitle">登录</h3>
+        <p class="lead" id="authLead">登录后可收藏竞赛、管理情报数据。</p>
+
+        <div class="field">
+          <label>邮箱</label>
+          <input type="email" id="authEmail" placeholder="例如 student@whut.edu.cn" />
+        </div>
+        <div class="field">
+          <label>密码</label>
+          <input type="password" id="authPassword" placeholder="请输入密码" />
+        </div>
+        <div class="field hidden" id="signupExtra1">
+          <label>昵称</label>
+          <input type="text" id="authUsername" placeholder="用于显示的昵称" />
+        </div>
+        <div class="field hidden" id="signupExtra2">
+          <label>学院</label>
+          <input type="text" id="authCollege" placeholder="例如 计算机与人工智能学院" />
+        </div>
+
+        <div class="form-actions">
+          <button class="btn btn-primary" id="btnAuthSubmit" style="flex:1">登录</button>
+        </div>
+
+        <div class="switch-line">
+          <span id="authSwitchText">还没有账号？</span>
+          <a href="javascript:void(0)" id="authSwitch">立即注册</a>
+          &nbsp;·&nbsp;
+          <a href="javascript:void(0)" id="btnSkipAuth">先随便看看</a>
+        </div>
+
+        <div class="hint" id="demoHint"></div>
+      </div>
+    </section>
+
+    <!-- ===================== 视图 2：情报列表 ===================== -->
+    <section id="viewList" class="hidden">
+      <div class="tabs" id="mainTabs">
+        <button class="tab active" data-nav="list">竞赛情报</button>
+        <button class="tab" data-nav="fav">我的收藏</button>
+        <button class="tab hidden" data-nav="admin" id="tabAdmin">管理后台</button>
+        <button class="tab" data-nav="about">数据来源说明</button>
+      </div>
+
+      <div class="stats" id="statsBar"></div>
+
+      <div class="filters">
+        <div class="field grow">
+          <label>关键词</label>
+          <input type="text" id="fKeyword" placeholder="搜索竞赛名称 / 主办单位 / 适合人群" />
+        </div>
+        <div class="field">
+          <label>类别</label>
+          <select id="fCategory">
+            <option value="all">全部类别</option>
+            <option value="学科竞赛">学科竞赛</option>
+            <option value="创新创业">创新创业</option>
+            <option value="程序设计">程序设计</option>
+            <option value="数学建模">数学建模</option>
+            <option value="商赛">商赛</option>
+            <option value="其他">其他</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>级别</label>
+          <select id="fLevel">
+            <option value="all">全部级别</option>
+            <option value="国家级">国家级</option>
+            <option value="省级">省级</option>
+            <option value="校级">校级</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>获奖收益</label>
+          <select id="fBenefit">
+            <option value="all">全部收益</option>
+            <option value="保研加分">保研加分</option>
+            <option value="综测加分">综测加分</option>
+            <option value="学分认定">学分认定</option>
+            <option value="评优">评优</option>
+            <option value="奖金">奖金</option>
+            <option value="升学就业">升学就业</option>
+          </select>
+        </div>
+        <button class="btn btn-ghost" id="btnResetFilter">重置</button>
+      </div>
+
+      <div class="grid" id="listGrid"></div>
+      <div class="empty hidden" id="listEmpty"><div class="big">🔍</div>没有符合条件的竞赛情报，换个筛选条件试试。</div>
+    </section>
+
+    <!-- ===================== 视图 3：详情 ===================== -->
+    <section id="viewDetail" class="hidden">
+      <button class="btn btn-text" id="btnBack" style="margin-bottom:14px">← 返回列表</button>
+      <div id="detailBody"></div>
+    </section>
+
+    <!-- ===================== 视图 4：我的收藏 ===================== -->
+    <section id="viewFav" class="hidden">
+      <div class="stats" id="favStats"></div>
+      <div class="grid" id="favGrid"></div>
+      <div class="empty hidden" id="favEmpty"><div class="big">⭐</div>还没有收藏任何竞赛，去列表页点个星标试试。</div>
+    </section>
+
+    <!-- ===================== 视图 5：管理后台 ===================== -->
+    <section id="viewAdmin" class="hidden">
+      <div class="stats">
+        <div class="stat"><b>管理后台</b>仅管理员可用，可新增 / 编辑 / 删除竞赛情报</div>
+        <div class="spacer" style="flex:1"></div>
+        <button class="btn btn-primary" id="btnNewComp">＋ 新增竞赛情报</button>
+      </div>
+      <div class="panel" style="padding:0; overflow:hidden">
+        <table class="admin-table" id="adminTable">
+          <thead>
+            <tr><th>竞赛名称</th><th>类别</th><th>级别</th><th>状态</th><th style="width:150px">操作</th></tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ===================== 视图 6：数据来源说明 ===================== -->
+    <section id="viewAbout" class="hidden">
+      <div class="section">
+        <h3>这个平台解决什么问题</h3>
+        <p>校内竞赛信息分散在教务通知、学院群文件、学长学姐的聊天记录里，学生很难快速判断"这个比赛值不值得参加、我能拿什么收益"。
+          赛情报把竞赛内容、适合人群、报名与比赛时间、校内认可度与获奖收益（保研加分 / 综测 / 学分 / 评优）聚合成一条条情报，
+          并且每条情报都标注来源类型与依据文件。</p>
+      </div>
+      <div class="section">
+        <h3>数据来源与可信度</h3>
+        <p>平台仅覆盖武汉理工大学校内的竞赛信息，不与竞赛官方做商务合作。每条情报的来源分为四类：</p>
+        <table class="benefit-table">
+          <thead><tr><th>来源类型</th><th>说明</th><th>建议可信度</th></tr></thead>
+          <tbody>
+            <tr><td>学校文件</td><td>教务处 / 学校层面正式发布的通知或办法</td><td>5</td></tr>
+            <tr><td>学院通知</td><td>各学院发布的通知、群文件</td><td>4</td></tr>
+            <tr><td>官方公告</td><td>竞赛组委会官网发布的报名公告</td><td>4</td></tr>
+            <tr><td>学长学姐经验</td><td>往届参赛者的经验贴，仅供参考</td><td>2</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="section">
+        <h3>免责说明</h3>
+        <p class="notice">本平台所有内容均为示例数据，用于课程作业演示。报名时间、比赛时间与保研 / 综测 / 学分等收益政策，最终以学校当年发布的最新官方文件为准。</p>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="wrap">赛情报 · 武汉理工大学校内竞赛情报聚合平台 &nbsp;|&nbsp; 数智编程课程作业 · 前端（HTML/CSS/JS）+ 后端（Supabase 数据库）</div>
+  </footer>
+
+  <div id="toast"></div>
+  <div id="modalRoot"></div>
+
+  <!-- Supabase JS SDK（未联网时自动降级为演示模式） -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+/* ==== js/config.js ==== */
+/* =========================================================================
+ * 赛情报 · 前端配置
+ * -------------------------------------------------------------------------
+ * 两种运行模式：
+ *   1) 演示模式（默认）：下面两项留空，应用自动使用浏览器本地存储 + 内置样例数据，
+ *      无需任何后端即可完整跑通所有页面，适合课堂展示 / 交作业时演示。
+ *   2) 真实模式：填入自己的 Supabase 项目信息，应用即连接真实数据库与登录系统。
+ *      项目地址：Supabase 控制台 → Project Settings → API
+ * ========================================================================= */
+
+window.APP_CONFIG = {
+  // 例：https://abcdefghijklmn.supabase.co
+  SUPABASE_URL: "",
+
+  // Project Settings → API → anon public key
+  SUPABASE_ANON_KEY: "",
+
+  // 系统名称（显示在页头）
+  APP_NAME: "赛情报",
+
+  // 副标题
+  APP_SUBTITLE: "武汉理工大学校内竞赛情报聚合平台",
+};
+
+</script>
+  <script>
+/* ==== js/api.js ==== */
+/* =========================================================================
+ * 赛情报 · 数据访问层 api.js
+ * -------------------------------------------------------------------------
+ * 对上（app.js）暴露统一的异步 API；对下自动选择两种数据源：
+ *   - 配置了 Supabase  → 走 Supabase（Auth + PostgREST + RLS）
+ *   - 未配置 Supabase  → 走 localStorage 演示模式（内置样例数据）
+ * 这样前端页面代码只写一份，演示与上线互不影响。
+ * ========================================================================= */
+
+const API = (function () {
+  const cfg = window.APP_CONFIG || {};
+  const hasSupabase = !!(cfg.SUPABASE_URL && cfg.SUPABASE_ANON_KEY && window.supabase);
+  const MODE = hasSupabase ? "supabase" : "demo";
+  const sb = hasSupabase
+    ? window.supabase.createClient(cfg.SUPABASE_URL, cfg.SUPABASE_ANON_KEY)
+    : null;
+
+  const LS = {
+    users: "sqb_demo_users",
+    session: "sqb_demo_session",
+    competitions: "sqb_demo_competitions",
+    benefits: "sqb_demo_benefits",
+    sources: "sqb_demo_sources",
+    favorites: "sqb_demo_favorites",
+  };
+
+  const uid = () => "id-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+  const read = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } };
+  const write = (k, v) => localStorage.setItem(k, JSON.stringify(v));
+
+  // ------------------------------------------------------------------
+  // 演示模式的内置样例数据（与 sql/init.sql 第 11 节保持一致）
+  // 均为示例，实际报名/比赛时间与收益政策以当年最新官方文件为准。
+  // ------------------------------------------------------------------
+  const DEMO_COMPETITIONS = [
+    { id: "c1", name: "全国大学生数学建模竞赛", category: "数学建模", organizer: "中国工业与应用数学学会", level: "国家级",
+      fit_audience: "大二及以上，理工科专业优先，需 3 人组队",
+      intro: "国内规模最大的基础性学科竞赛之一，考察建模、编程与论文写作能力，校赛选拔后推荐国赛。",
+      reg_start: "2026-04-01", reg_end: "2026-06-15", contest_start: "2026-09-10", contest_end: "2026-09-13",
+      source_type: "学校文件", credibility: 5, status: "open", view_count: 128, created_at: "2026-03-20" },
+    { id: "c2", name: "中国国际大学生创新大赛（互联网+）", category: "创新创业", organizer: "教育部", level: "国家级",
+      fit_audience: "全校本硕学生均可，鼓励跨专业组队",
+      intro: "原“互联网+”大学生创新创业大赛，含高教主赛道、青年红色筑梦之旅赛道等，校内认可度高。",
+      reg_start: "2026-03-20", reg_end: "2026-05-30", contest_start: "2026-06-10", contest_end: "2026-10-15",
+      source_type: "学院通知", credibility: 5, status: "closing", view_count: 342, created_at: "2026-03-18" },
+    { id: "c3", name: "蓝桥杯全国软件和信息技术专业人才大赛", category: "程序设计", organizer: "工业和信息化部人才交流中心", level: "国家级",
+      fit_audience: "计算机、自动化、电子信息等相关专业，个人赛",
+      intro: "个人赛，含算法、软件开发等方向，省赛晋级国赛，对编程能力提升与求职均有帮助。",
+      reg_start: "2026-03-01", reg_end: "2026-03-31", contest_start: "2026-04-12", contest_end: "2026-06-01",
+      source_type: "官方公告", credibility: 4, status: "open", view_count: 205, created_at: "2026-02-25" },
+    { id: "c4", name: "全国大学生数学竞赛", category: "学科竞赛", organizer: "中国数学会", level: "省级",
+      fit_audience: "数学基础较好的本科生，分数学类与非数学类",
+      intro: "以笔试为主，考察高等数学与数学分析，是检验数学基本功的重要赛事。",
+      reg_start: "2026-09-01", reg_end: "2026-09-20", contest_start: "2026-10-25", contest_end: "2026-10-25",
+      source_type: "学校文件", credibility: 4, status: "open", view_count: 76, created_at: "2026-08-28" },
+    { id: "c5", name: "武汉理工大学大学生创新创业训练计划", category: "创新创业", organizer: "武汉理工大学教务处", level: "校级",
+      fit_audience: "全校本科生，需指导教师，鼓励团队申报",
+      intro: "校级大创项目，立项后有经费支持，结题优秀可推荐参加省级、国家级大创。",
+      reg_start: "2026-03-01", reg_end: "2026-04-10", contest_start: "2026-04-20", contest_end: "2027-04-20",
+      source_type: "学校文件", credibility: 5, status: "open", view_count: 91, created_at: "2026-02-20" },
+  ];
+
+  const DEMO_BENEFITS = [
+    { id: "b1", competition_id: "c1", benefit_type: "保研加分", value_desc: "国赛一等奖在推免综合测评中按最高档加分", basis: "《武汉理工大学推荐优秀应届本科毕业生免试攻读研究生工作实施办法》" },
+    { id: "b2", competition_id: "c1", benefit_type: "综测加分", value_desc: "按获奖等级计入综合测评加分", basis: "学院综合测评实施细则" },
+    { id: "b3", competition_id: "c2", benefit_type: "保研加分", value_desc: "国赛获奖可获推免加分，金奖加分最高", basis: "推免工作实施办法" },
+    { id: "b4", competition_id: "c2", benefit_type: "学分认定", value_desc: "国赛获奖可申请认定创新创业实践学分", basis: "创新创业学分认定办法" },
+    { id: "b5", competition_id: "c2", benefit_type: "奖金", value_desc: "国赛获奖可获得学校专项奖励", basis: "学校学科竞赛奖励办法" },
+    { id: "b6", competition_id: "c3", benefit_type: "综测加分", value_desc: "省赛及以上获奖计入综测", basis: "学院综合测评实施细则" },
+    { id: "b7", competition_id: "c3", benefit_type: "升学就业", value_desc: "获奖经历在求职笔试/面试中有加分", basis: "往届学长经验" },
+    { id: "b8", competition_id: "c4", benefit_type: "综测加分", value_desc: "省级获奖计入综测加分", basis: "学院综合测评实施细则" },
+    { id: "b9", competition_id: "c5", benefit_type: "学分认定", value_desc: "结题合格可认定创新创业实践学分", basis: "创新创业学分认定办法" },
+    { id: "b10", competition_id: "c5", benefit_type: "评优", value_desc: "优秀结题在评奖评优中优先考虑", basis: "学校评奖评优细则" },
+  ];
+
+  const DEMO_SOURCES = [
+    { id: "s1", competition_id: "c1", title: "《关于组织参加2026年全国大学生数学建模竞赛的通知》", source_type: "学校文件", url: "", verified: true },
+    { id: "s2", competition_id: "c2", title: "教务处《中国国际大学生创新大赛校内选拔通知》", source_type: "学院通知", url: "", verified: true },
+    { id: "s3", competition_id: "c3", title: "蓝桥杯大赛官方网站报名公告", source_type: "官方公告", url: "https://dasai.lanqiao.cn/", verified: true },
+    { id: "s4", competition_id: "c4", title: "理学院《全国大学生数学竞赛报名通知》", source_type: "学院通知", url: "", verified: false },
+    { id: "s5", competition_id: "c5", title: "《武汉理工大学大学生创新创业训练计划管理办法》", source_type: "学校文件", url: "", verified: true },
+  ];
+
+  const DEMO_USERS = [
+    { id: "u-admin", email: "admin@whut.edu.cn", password: "admin123", username: "平台管理员", role: "admin", college: "计算机与人工智能学院" },
+    { id: "u-student", email: "student@whut.edu.cn", password: "student123", username: "李同学", role: "user", college: "理学院" },
+  ];
+
+  let demoCache = null;
+
+  function demoInit() {
+    if (!localStorage.getItem(LS.users)) write(LS.users, DEMO_USERS);
+    if (!localStorage.getItem(LS.competitions)) write(LS.competitions, DEMO_COMPETITIONS);
+    if (!localStorage.getItem(LS.benefits)) write(LS.benefits, DEMO_BENEFITS);
+    if (!localStorage.getItem(LS.sources)) write(LS.sources, DEMO_SOURCES);
+    if (!localStorage.getItem(LS.favorites)) write(LS.favorites, []);
+  }
+
+  const delay = (v) => new Promise((res) => setTimeout(() => res(v), 60));
+
+  // ================= 认证 =================
+  async function getSession() {
+    if (MODE === "supabase") {
+      const { data } = await sb.auth.getSession();
+      return data.session || null;
+    }
+    return read(LS.session, null);
+  }
+
+  async function getCurrentUser() {
+    if (MODE === "supabase") {
+      const { data } = await sb.auth.getUser();
+      if (!data || !data.user) return null;
+      const profile = await getProfile();
+      return { id: data.user.id, email: data.user.email, ...profile };
+    }
+    const s = read(LS.session, null);
+    if (!s) return null;
+    const u = read(LS.users, DEMO_USERS).find((x) => x.id === s.id);
+    return u ? { ...u } : null;
+  }
+
+  async function getProfile() {
+    if (MODE !== "supabase") return {};
+    const { data: u } = await sb.auth.getUser();
+    if (!u || !u.user) return {};
+    const { data } = await sb.from("profiles").select("*").eq("id", u.user.id).maybeSingle();
+    return data || {};
+  }
+
+  async function signUp({ email, password, username, college }) {
+    if (MODE === "supabase") {
+      const { data, error } = await sb.auth.signUp({
+        email, password,
+        options: { data: { username, college } },
+      });
+      if (error) throw error;
+      return data.user;
+    }
+    const users = read(LS.users, DEMO_USERS);
+    if (users.some((u) => u.email === email)) throw new Error("该邮箱已注册");
+    const user = { id: uid(), email, password, username: username || email.split("@")[0], role: "user", college: college || "" };
+    users.push(user);
+    write(LS.users, users);
+    write(LS.session, { id: user.id, email: user.email });
+    return user;
+  }
+
+  async function signIn({ email, password }) {
+    if (MODE === "supabase") {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      return data.user;
+    }
+    const users = read(LS.users, DEMO_USERS);
+    const u = users.find((x) => x.email === email && x.password === password);
+    if (!u) throw new Error("邮箱或密码不正确");
+    write(LS.session, { id: u.id, email: u.email });
+    return u;
+  }
+
+  async function signOut() {
+    if (MODE === "supabase") { await sb.auth.signOut(); return; }
+    localStorage.removeItem(LS.session);
+  }
+
+  function onAuthChange(cb) {
+    if (MODE === "supabase") sb.auth.onAuthStateChange((_e, session) => cb(session));
+  }
+
+  // ================= 竞赛情报 =================
+  async function listCompetitions(filter = {}) {
+    let rows;
+    if (MODE === "supabase") {
+      const { data, error } = await sb.from("competition_summary").select("*").order("created_at", { ascending: false });
+      if (error) throw error;
+      rows = data;
+    } else {
+      demoInit();
+      const comps = read(LS.competitions, DEMO_COMPETITIONS);
+      const benefits = read(LS.benefits, DEMO_BENEFITS);
+      const favs = read(LS.favorites, []);
+      rows = comps.map((c) => {
+        const bs = benefits.filter((b) => b.competition_id === c.id);
+        return {
+          ...c,
+          benefit_types: [...new Set(bs.map((b) => b.benefit_type))].join("、"),
+          benefit_desc: bs.map((b) => b.value_desc).join("；"),
+          favorite_count: favs.filter((f) => f.competition_id === c.id).length,
+        };
+      });
+      rows.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
+      rows = await delay(rows);
+    }
+    if (filter.keyword) {
+      const k = filter.keyword.toLowerCase();
+      rows = rows.filter((r) => (r.name + (r.organizer || "") + (r.fit_audience || "")).toLowerCase().includes(k));
+    }
+    if (filter.category && filter.category !== "all") rows = rows.filter((r) => r.category === filter.category);
+    if (filter.level && filter.level !== "all") rows = rows.filter((r) => r.level === filter.level);
+    if (filter.benefit && filter.benefit !== "all") rows = rows.filter((r) => (r.benefit_types || "").includes(filter.benefit));
+    return rows;
+  }
+
+  async function getCompetition(id) {
+    if (MODE === "supabase") {
+      const { data, error } = await sb.from("competition_summary").select("*").eq("id", id).maybeSingle();
+      if (error) throw error;
+      if (!data) return null;
+      const [b, s] = await Promise.all([
+        sb.from("benefits").select("*").eq("competition_id", id),
+        sb.from("sources").select("*").eq("competition_id", id),
+      ]);
+      return { ...data, benefits: b.data || [], sources: s.data || [] };
+    }
+    demoInit();
+    const comps = read(LS.competitions, DEMO_COMPETITIONS);
+    const c = comps.find((x) => x.id === id);
+    if (!c) return null;
+    return {
+      ...c,
+      benefits: read(LS.benefits, DEMO_BENEFITS).filter((b) => b.competition_id === id),
+      sources: read(LS.sources, DEMO_SOURCES).filter((s) => s.competition_id === id),
+    };
+  }
+
+  async function createCompetition(payload) {
+    if (MODE === "supabase") {
+      const { data: u } = await sb.auth.getUser();
+      const { data, error } = await sb.from("competitions")
+        .insert({ ...payload, created_by: u && u.user ? u.user.id : null })
+        .select().single();
+      if (error) throw error;
+      return data;
+    }
+    demoInit();
+    const comps = read(LS.competitions, DEMO_COMPETITIONS);
+    const row = { id: uid(), view_count: 0, created_at: new Date().toISOString().slice(0, 10), ...payload };
+    comps.push(row);
+    write(LS.competitions, comps);
+    return row;
+  }
+
+  async function updateCompetition(id, payload) {
+    if (MODE === "supabase") {
+      const { data, error } = await sb.from("competitions").update(payload).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    }
+    demoInit();
+    const comps = read(LS.competitions, DEMO_COMPETITIONS);
+    const i = comps.findIndex((c) => c.id === id);
+    if (i >= 0) { comps[i] = { ...comps[i], ...payload }; write(LS.competitions, comps); }
+    return comps[i];
+  }
+
+  async function deleteCompetition(id) {
+    if (MODE === "supabase") {
+      const { error } = await sb.from("competitions").delete().eq("id", id);
+      if (error) throw error;
+      return true;
+    }
+    demoInit();
+    write(LS.competitions, read(LS.competitions, DEMO_COMPETITIONS).filter((c) => c.id !== id));
+    write(LS.benefits, read(LS.benefits, DEMO_BENEFITS).filter((b) => b.competition_id !== id));
+    write(LS.sources, read(LS.sources, DEMO_SOURCES).filter((s) => s.competition_id !== id));
+    write(LS.favorites, read(LS.favorites, []).filter((f) => f.competition_id !== id));
+    return true;
+  }
+
+  async function incrementView(id) {
+    if (MODE === "supabase") { await sb.rpc("increment_view", { comp_id: id }); return; }
+    const comps = read(LS.competitions, DEMO_COMPETITIONS);
+    const c = comps.find((x) => x.id === id);
+    if (c) { c.view_count = (c.view_count || 0) + 1; write(LS.competitions, comps); }
+  }
+
+  // ================= 收藏 =================
+  async function listFavorites() {
+    if (MODE === "supabase") {
+      const { data: favs, error } = await sb.from("favorites")
+        .select("competition_id, created_at").order("created_at", { ascending: false });
+      if (error) throw error;
+      const ids = (favs || []).map((f) => f.competition_id);
+      if (!ids.length) return [];
+      const { data: comps } = await sb.from("competition_summary").select("*").in("id", ids);
+      return comps || [];
+    }
+    demoInit();
+    const me = read(LS.session, null);
+    if (!me) return [];
+    const ids = read(LS.favorites, []).filter((f) => f.user_id === me.id).map((f) => f.competition_id);
+    const comps = read(LS.competitions, DEMO_COMPETITIONS);
+    return comps.filter((c) => ids.includes(c.id));
+  }
+
+  async function isFavorite(id) {
+    const me = await getCurrentUser();
+    if (!me) return false;
+    if (MODE === "supabase") {
+      const { data } = await sb.from("favorites").select("id").eq("competition_id", id).maybeSingle();
+      return !!(data && data.id);
+    }
+    const f = read(LS.favorites, []).find((x) => x.user_id === me.id && x.competition_id === id);
+    return !!f;
+  }
+
+  async function addFavorite(id) {
+    const me = await getCurrentUser();
+    if (!me) throw new Error("请先登录后再收藏");
+    if (MODE === "supabase") {
+      const { error } = await sb.from("favorites").insert({ user_id: me.id, competition_id: id });
+      if (error) throw error;
+      return;
+    }
+    const f = read(LS.favorites, []);
+    if (!f.some((x) => x.user_id === me.id && x.competition_id === id)) {
+      f.push({ id: uid(), user_id: me.id, competition_id: id, created_at: new Date().toISOString() });
+      write(LS.favorites, f);
+    }
+  }
+
+  async function removeFavorite(id) {
+    const me = await getCurrentUser();
+    if (!me) return;
+    if (MODE === "supabase") {
+      const { error } = await sb.from("favorites").delete().eq("user_id", me.id).eq("competition_id", id);
+      if (error) throw error;
+      return;
+    }
+    write(LS.favorites, read(LS.favorites, []).filter((x) => !(x.user_id === me.id && x.competition_id === id)));
+  }
+
+  return {
+    MODE,
+    demoAccounts: MODE === "demo" ? DEMO_USERS.map((u) => ({ email: u.email, password: u.password, role: u.role })) : [],
+    getSession, getCurrentUser, getProfile,
+    signUp, signIn, signOut, onAuthChange,
+    listCompetitions, getCompetition, createCompetition, updateCompetition, deleteCompetition, incrementView,
+    listFavorites, isFavorite, addFavorite, removeFavorite,
+  };
+})();
+
+window.API = API;
+
+</script>
+  <script>
+/* ==== js/app.js ==== */
+/* =========================================================================
+ * 赛情报 · 页面控制 app.js
+ * 职责：视图切换、渲染列表/详情、登录注册、收藏、管理后台增删改。
+ * 所有数据操作都通过 window.API 完成，本文件不直接接触数据库。
+ * ========================================================================= */
+(function () {
+  const $ = (s, r = document) => r.querySelector(s);
+  const $ = (s, r = document) => Array.prototype.slice.call(r.querySelectorAll(s));
+
+  const state = {
+    user: null,
+    tab: "list",
+    currentComp: null,
+  };
+
+  const STATUS_TEXT = { open: "报名中", closing: "即将截止", closed: "已结束" };
+  const LEVEL_CLASS = { 国家级: "national", 省级: "province", 校级: "school" };
+
+  // ------------------------- 小工具 -------------------------
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;");
+  }
+  function toast(msg, type = "") {
+    const box = $("#toast");
+    const el = document.createElement("div");
+    el.className = "toast-item " + type;
+    el.textContent = msg;
+    box.appendChild(el);
+    setTimeout(() => el.remove(), 2600);
+  }
+  function fmtDate(d) {
+    if (!d) return "待定";
+    return String(d).slice(0, 10);
+  }
+  function show(viewId) {
+    ["viewAuth", "viewList", "viewDetail", "viewFav", "viewAdmin", "viewAbout"].forEach((id) => {
+      $("#" + id).classList.toggle("hidden", id !== viewId);
+    });
+  }
+
+  // ------------------------- 启动 -------------------------
+  async function boot() {
+    $("#modeBadge").textContent = API.MODE === "supabase" ? "已连接 Supabase" : "演示模式（本地存储）";
+    if (API.MODE === "demo" && API.demoAccounts.length) {
+      $("#demoHint").innerHTML =
+        "演示模式内置账号（可直接登录体验）：<br>" +
+        API.demoAccounts.map((a) => `· ${esc(a.email)} / ${esc(a.password)}（${a.role === "admin" ? "管理员" : "普通用户"}）`).join("<br>") +
+        "<br>也可自行注册新账号。";
+    } else {
+      $("#demoHint").textContent = "已连接 Supabase，请使用你的注册邮箱登录。未登录也可以浏览竞赛情报。";
+    }
+
+    state.user = await API.getCurrentUser();
+    refreshUserChip();
+    await renderList();
+    show(state.user ? "viewList" : "viewList"); // 未登录也允许先浏览
+    if (!state.user) $("#userChip").classList.add("hidden");
+  }
+
+  function refreshUserChip() {
+    const chip = $("#userChip");
+    $("#btnLogin").classList.toggle("hidden", !!state.user);
+    if (state.user) {
+      chip.classList.remove("hidden");
+      $("#userName").textContent = (state.user.username || state.user.email) + (state.user.role === "admin" ? " · 管理员" : "");
+      $("#tabAdmin").classList.toggle("hidden", state.user.role !== "admin");
+    } else {
+      chip.classList.add("hidden");
+      $("#tabAdmin").classList.add("hidden");
+      $("#userName").textContent = "未登录";
+    }
+  }
+
+  // ------------------------- 登录 / 注册 -------------------------
+  let authMode = "signin";
+  function setAuthMode(mode) {
+    authMode = mode;
+    const isSignup = mode === "signup";
+    $("#authTitle").textContent = isSignup ? "注册新账号" : "登录";
+    $("#authLead").textContent = isSignup ? "注册后可收藏竞赛并保存个人数据。" : "登录后可收藏竞赛、管理情报数据。";
+    $("#btnAuthSubmit").textContent = isSignup ? "注册并登录" : "登录";
+    $("#authSwitchText").textContent = isSignup ? "已有账号？" : "还没有账号？";
+    $("#authSwitch").textContent = isSignup ? "去登录" : "立即注册";
+    $("#signupExtra1").classList.toggle("hidden", !isSignup);
+    $("#signupExtra2").classList.toggle("hidden", !isSignup);
+  }
+
+  async function submitAuth() {
+    const email = $("#authEmail").value.trim();
+    const password = $("#authPassword").value;
+    if (!email || !password) { toast("请填写邮箱和密码", "err"); return; }
+    try {
+      $("#btnAuthSubmit").disabled = true;
+      if (authMode === "signup") {
+        await API.signUp({ email, password, username: $("#authUsername").value.trim(), college: $("#authCollege").value.trim() });
+        toast("注册成功，已登录", "ok");
+      } else {
+        await API.signIn({ email, password });
+        toast("登录成功", "ok");
+      }
+      state.user = await API.getCurrentUser();
+      refreshUserChip();
+      switchTab("list");
+    } catch (e) {
+      toast(e.message || "操作失败", "err");
+    } finally {
+      $("#btnAuthSubmit").disabled = false;
+    }
+  }
+
+  async function logout() {
+    await API.signOut();
+    state.user = null;
+    refreshUserChip();
+    toast("已退出登录");
+    switchTab("list");
+  }
+
+  // ------------------------- 列表 -------------------------
+  function levelTag(level) {
+    return `<span class="tag ${LEVEL_CLASS[level] || "line"}">${esc(level)}</span>`;
+  }
+  function statusTag(status) {
+    const cls = status === "open" ? "ok" : status === "closing" ? "warn" : "line";
+    return `<span class="tag ${cls}">${esc(STATUS_TEXT[status] || status)}</span>`;
+  }
+
+  async function renderList() {
+    const rows = await API.listCompetitions({
+      keyword: $("#fKeyword").value.trim(),
+      category: $("#fCategory").value,
+      level: $("#fLevel").value,
+      benefit: $("#fBenefit").value,
+    });
+    const grid = $("#listGrid");
+    $("#listEmpty").classList.toggle("hidden", rows.length > 0);
+    grid.innerHTML = rows.map(cardHtml).join("");
+    $(".card", grid).forEach((el) => el.addEventListener("click", () => openDetail(el.dataset.id)));
+
+    const totalViews = rows.reduce((a, b) => a + (b.view_count || 0), 0);
+    const national = rows.filter((r) => r.level === "国家级").length;
+    $("#statsBar").innerHTML =
+      `<div class="stat"><b>${rows.length}</b>条情报</div>` +
+      `<div class="stat"><b>${national}</b>个国家级赛事</div>` +
+      `<div class="stat"><b>${totalViews}</b>次浏览</div>` +
+      `<div class="stat">每条情报均标注来源类型与依据</div>`;
+  }
+
+  function cardHtml(c) {
+    const benefits = (c.benefit_types || "").split("、").filter(Boolean).slice(0, 3);
+    return `
+      <article class="card" data-id="${esc(c.id)}">
+        <h3>${esc(c.name)}</h3>
+        <div class="meta">
+          <span class="tag">${esc(c.category)}</span>
+          ${levelTag(c.level)}
+          ${statusTag(c.status)}
+        </div>
+        <div class="meta"><span>主办：${esc(c.organizer || "—")}</span></div>
+        <div class="desc">适合人群：${esc(c.fit_audience || "见详情")}</div>
+        ${benefits.length ? `<div class="benefit-line">获奖收益：${benefits.map(esc).join(" · ")}</div>` : ""}
+        <div class="foot">
+          <span class="views">👁 ${c.view_count || 0} · 收藏 ${c.favorite_count || 0}</span>
+          <span class="tag gold">可信度 ${esc(c.credibility)}/5</span>
+        </div>
+      </article>`;
+  }
+
+  // ------------------------- 详情 -------------------------
+  async function openDetail(id) {
+    const c = await API.getCompetition(id);
+    if (!c) { toast("未找到该情报", "err"); return; }
+    state.currentComp = c;
+    await API.incrementView(id);
+    const fav = state.user ? await API.isFavorite(id) : false;
+
+    const benefits = (c.benefits || []).length
+      ? `<table class="benefit-table"><thead><tr><th style="width:130px">收益类型</th><th>具体说明</th><th style="width:230px">政策依据</th></tr></thead><tbody>` +
+        c.benefits.map((b) => `<tr><td>${esc(b.benefit_type)}</td><td>${esc(b.value_desc)}</td><td>${esc(b.basis || "—")}</td></tr>`).join("") +
+        `</tbody></table>`
+      : `<p class="notice">暂未收录该竞赛的收益说明。</p>`;
+
+    const sources = (c.sources || []).length
+      ? c.sources.map((s) => `<div class="source-item"><span class="dot ${s.verified ? "" : "no"}"></span><div>${esc(s.title)} <span class="tag line">${esc(s.source_type)}</span> <span class="tag ${s.verified ? "ok" : "warn"}">${s.verified ? "已核验" : "待核验"}</span></div></div>`).join("")
+      : `<p class="notice">暂未收录该竞赛的来源依据。</p>`;
+
+    $("#detailBody").innerHTML = `
+      <div class="detail-head">
+        <h2>${esc(c.name)}</h2>
+        <div class="tags">
+          <span class="tag">${esc(c.category)}</span>
+          ${levelTag(c.level)}
+          ${statusTag(c.status)}
+          <span class="tag line">来源：${esc(c.source_type)}</span>
+          <span class="tag gold">可信度 ${esc(c.credibility)}/5</span>
+        </div>
+        <p>${esc(c.intro || "暂无简介")}</p>
+        <div class="info-grid">
+          <div class="info-item"><div class="k">主办单位</div><div class="v">${esc(c.organizer || "—")}</div></div>
+          <div class="info-item"><div class="k">适合人群</div><div class="v">${esc(c.fit_audience || "—")}</div></div>
+          <div class="info-item"><div class="k">报名时间</div><div class="v">${fmtDate(c.reg_start)} ~ ${fmtDate(c.reg_end)}</div></div>
+          <div class="info-item"><div class="k">比赛时间</div><div class="v">${fmtDate(c.contest_start)} ~ ${fmtDate(c.contest_end)}</div></div>
+          <div class="info-item"><div class="k">浏览量 / 收藏</div><div class="v">${(c.view_count || 0) + 1} 次 / ${c.favorite_count || 0} 人</div></div>
+          <div class="info-item"><div class="k">录入时间</div><div class="v">${fmtDate(c.created_at)}</div></div>
+        </div>
+        <div class="detail-actions">
+          <button class="btn ${fav ? "btn-ghost" : "btn-primary"}" id="btnFav">${fav ? "★ 已收藏，点击取消" : "☆ 收藏到我的清单"}</button>
+          ${state.user && state.user.role === "admin" ? `<button class="btn btn-ghost" id="btnEdit">编辑</button>` : ""}
+        </div>
+      </div>
+
+      <div class="section"><h3>获奖收益（保研 / 综测 / 学分 / 评优）</h3>${benefits}</div>
+      <div class="section"><h3>来源依据</h3>${sources}
+        <p class="notice" style="margin-top:12px">报名与比赛时间、收益政策以学校当年发布的最新官方文件为准。</p>
+      </div>`;
+
+    $("#btnFav").addEventListener("click", () => toggleFav(c.id));
+    if ($("#btnEdit")) $("#btnEdit").addEventListener("click", () => openForm(c));
+    show("viewDetail");
+    window.scrollTo(0, 0);
+  }
+
+  async function toggleFav(id) {
+    if (!state.user) { toast("请先登录后再收藏", "err"); show("viewAuth"); setAuthMode("signin"); return; }
+    try {
+      const fav = await API.isFavorite(id);
+      if (fav) { await API.removeFavorite(id); toast("已取消收藏"); }
+      else { await API.addFavorite(id); toast("已加入我的收藏", "ok"); }
+      await openDetail(id);
+    } catch (e) { toast(e.message || "操作失败", "err"); }
+  }
+
+  // ------------------------- 收藏 -------------------------
+  async function renderFav() {
+    if (!state.user) { show("viewAuth"); setAuthMode("signin"); return; }
+    const rows = await API.listFavorites();
+    const grid = $("#favGrid");
+    $("#favEmpty").classList.toggle("hidden", rows.length > 0);
+    grid.innerHTML = rows.map(cardHtml).join("");
+    $(".card", grid).forEach((el) => el.addEventListener("click", () => openDetail(el.dataset.id)));
+    $("#favStats").innerHTML = `<div class="stat"><b>${rows.length}</b>条已收藏</div><div class="stat">${esc(state.user.username || state.user.email)} 的收藏清单</div>`;
+    show("viewFav");
+  }
+
+  // ------------------------- 管理后台 -------------------------
+  async function renderAdmin() {
+    if (!state.user || state.user.role !== "admin") { toast("需要管理员权限", "err"); switchTab("list"); return; }
+    const rows = await API.listCompetitions({});
+    const body = $("#adminTable").querySelector("tbody");
+    body.innerHTML = rows.map((c) => `
+      <tr>
+        <td>${esc(c.name)}</td>
+        <td>${esc(c.category)}</td>
+        <td>${esc(c.level)}</td>
+        <td>${statusTag(c.status)}</td>
+        <td><div class="ops">
+          <button class="btn btn-sm btn-ghost" data-edit="${esc(c.id)}">编辑</button>
+          <button class="btn btn-sm btn-danger" data-del="${esc(c.id)}">删除</button>
+        </div></td>
+      </tr>`).join("");
+    $("[data-edit]", body).forEach((b) => b.addEventListener("click", async () => openForm(await API.getCompetition(b.dataset.edit))));
+    $("[data-del]", body).forEach((b) => b.addEventListener("click", () => delComp(b.dataset.del)));
+    show("viewAdmin");
+  }
+
+  async function delComp(id) {
+    if (!confirm("确定删除这条竞赛情报吗？其收益与来源会一并删除。")) return;
+    try { await API.deleteCompetition(id); toast("已删除", "ok"); renderAdmin(); } catch (e) { toast(e.message || "删除失败", "err"); }
+  }
+
+  function openForm(c) {
+    const isEdit = !!c;
+    c = c || {};
+    const opt = (v, list, cur) => list.map((x) => `<option value="${x}" ${x === cur ? "selected" : ""}>${x}</option>`).join("");
+    $("#modalRoot").innerHTML = `
+      <div class="modal-mask" id="modalMask">
+        <div class="modal">
+          <h3>${isEdit ? "编辑竞赛情报" : "新增竞赛情报"}</h3>
+          <div class="form-grid">
+            <div class="field full"><label>竞赛名称 *</label><input id="mName" value="${esc(c.name || "")}" /></div>
+            <div class="field"><label>类别</label><select id="mCategory">${opt("类别", ["学科竞赛","创新创业","程序设计","数学建模","商赛","其他"], c.category)}</select></div>
+            <div class="field"><label>级别</label><select id="mLevel">${opt("级别", ["国家级","省级","校级"], c.level)}</select></div>
+            <div class="field"><label>主办单位</label><input id="mOrganizer" value="${esc(c.organizer || "")}" /></div>
+            <div class="field"><label>状态</label><select id="mStatus">${["open","closing","closed"].map((s) => `<option value="${s}" ${s === c.status ? "selected" : ""}>${STATUS_TEXT[s]}</option>`).join("")}</select></div>
+            <div class="field"><label>适合人群</label><input id="mFit" value="${esc(c.fit_audience || "")}" /></div>
+            <div class="field"><label>来源类型</label><select id="mSourceType">${opt("来源", ["学校文件","学院通知","官方公告","学长学姐经验"], c.source_type)}</select></div>
+            <div class="field"><label>报名开始</label><input type="date" id="mRegStart" value="${esc(c.reg_start || "")}" /></div>
+            <div class="field"><label>报名截止</label><input type="date" id="mRegEnd" value="${esc(c.reg_end || "")}" /></div>
+            <div class="field"><label>比赛开始</label><input type="date" id="mContestStart" value="${esc(c.contest_start || "")}" /></div>
+            <div class="field"><label>比赛结束</label><input type="date" id="mContestEnd" value="${esc(c.contest_end || "")}" /></div>
+            <div class="field"><label>可信度 1-5</label><input type="number" min="1" max="5" id="mCred" value="${esc(c.credibility || 3)}" /></div>
+            <div class="field full"><label>竞赛简介</label><textarea id="mIntro" rows="3">${esc(c.intro || "")}</textarea></div>
+          </div>
+          <div class="modal-foot">
+            <button class="btn btn-ghost" id="mCancel">取消</button>
+            <button class="btn btn-primary" id="mSave">保存</button>
+          </div>
+        </div>
+      </div>`;
+    $("#mCancel").addEventListener("click", () => ($("#modalRoot").innerHTML = ""));
+    $("#modalMask").addEventListener("click", (e) => { if (e.target.id === "modalMask") $("#modalRoot").innerHTML = ""; });
+    $("#mSave").addEventListener("click", async () => {
+      const payload = {
+        name: $("#mName").value.trim(),
+        category: $("#mCategory").value,
+        level: $("#mLevel").value,
+        organizer: $("#mOrganizer").value.trim(),
+        status: $("#mStatus").value,
+        fit_audience: $("#mFit").value.trim(),
+        source_type: $("#mSourceType").value,
+        reg_start: $("#mRegStart").value || null,
+        reg_end: $("#mRegEnd").value || null,
+        contest_start: $("#mContestStart").value || null,
+        contest_end: $("#mContestEnd").value || null,
+        credibility: parseInt($("#mCred").value, 10) || 3,
+        intro: $("#mIntro").value.trim(),
+      };
+      if (!payload.name) { toast("请填写竞赛名称", "err"); return; }
+      try {
+        if (isEdit) { await API.updateCompetition(c.id, payload); toast("已保存修改", "ok"); }
+        else { await API.createCompetition(payload); toast("已新增情报", "ok"); }
+        $("#modalRoot").innerHTML = "";
+        renderAdmin();
+      } catch (e) { toast(e.message || "保存失败", "err"); }
+    });
+  }
+
+  // ------------------------- 页签切换 -------------------------
+  function switchTab(tab) {
+    state.tab = tab;
+    $("#mainTabs .tab").forEach((t) => t.classList.toggle("active", t.dataset.nav === tab));
+    if (tab === "list") { renderList().then(() => show("viewList")); }
+    else if (tab === "fav") renderFav();
+    else if (tab === "admin") renderAdmin();
+    else if (tab === "about") show("viewAbout");
+  }
+
+  // ------------------------- 事件绑定 -------------------------
+  function bind() {
+    $("#btnAuthSubmit").addEventListener("click", submitAuth);
+    $("#authSwitch").addEventListener("click", () => setAuthMode(authMode === "signin" ? "signup" : "signin"));
+    $("#btnSkipAuth").addEventListener("click", () => switchTab("list"));
+    $("#btnLogin").addEventListener("click", () => { setAuthMode("signin"); show("viewAuth"); });
+    $("#btnLogout").addEventListener("click", logout);
+
+    $("#mainTabs .tab").forEach((t) => t.addEventListener("click", () => switchTab(t.dataset.nav)));
+    $("#btnBack").addEventListener("click", () => switchTab("list"));
+    $("#btnResetFilter").addEventListener("click", () => {
+      $("#fKeyword").value = ""; $("#fCategory").value = "all"; $("#fLevel").value = "all"; $("#fBenefit").value = "all";
+      renderList();
+    });
+    ["fKeyword", "fCategory", "fLevel", "fBenefit"].forEach((id) =>
+      $("#" + id).addEventListener(id === "fKeyword" ? "input" : "change", () => { clearTimeout(window.__ft); window.__ft = setTimeout(renderList, 180); })
+    );
+    $("#btnNewComp").addEventListener("click", () => openForm(null));
+    $("#userChip").addEventListener("click", (e) => { if (e.target.id !== "btnLogout") switchTab("fav"); });
+  }
+
+  document.addEventListener("DOMContentLoaded", () => { bind(); boot(); });
+})();
+
+</script>
+</body>
+</html>
